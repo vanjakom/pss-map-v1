@@ -1,9 +1,205 @@
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Планинарски савез Србије - мапа</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+    <style>
+      ::-webkit-scrollbar {
+	  display: none;
+      }
+      #content {
+	  white-space: nowrap;
+	  overflow: hidden;
+      }
+      
+      #map {
+	  position: absolute;
+	  left: 0px;
+	  top: 0px;
+	  right: 300px;
+	  bottom: 0px;
+	  cursor: crosshair;
+      }
+      #navigation {
+	  position: absolute;
+	  top: 0px;
+	  right: 0px;
+	  bottom: 0px;
+	  width: 300px;
+	  overflow-y: scroll;
+	  
+      }
+      .navigation_trail {
+	  widht: 300px;
+	  background-color: #BFBFBF;
+	  padding: 5px;
+	  margin-top: 10px;
+	  cursor: pointer;
+      }
+    </style>      
   </head>
   <body>
-    Hello world!
+    <div id="content">
+      <div id="map"></div>
+      <div id="navigation"></div>
+    </div>
+    <script type="text/javascript">
+      let map = L.map("map", {maxBoundsViscosity: 1.0})
+      map.setMaxBounds ([[-90,-180],[90,180]])
+
+      let layers = L.control.layers()
+      layers.addTo(map)
+      
+      let osmTile = L.tileLayer(
+	  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+	  {
+	      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	      maxZoom: 21,
+	      bounds: [[-90,-180],[90,180]],
+	      noWrap: true
+	  })
+      layers.addBaseLayer(osmTile, "Open Street Map")
+      osmTile.addTo(map)
+
+      let osmRSTile = L.tileLayer(
+	  'http://ue.cache.osmsrbija.iz.rs/cir/{z}/{x}/{y}.png',
+	  {
+	      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	      maxZoom: 21,
+	      bounds: [[-90,-180],[90,180]],
+	      noWrap: true
+	  })
+      layers.addBaseLayer(osmRSTile, "Open Street Map Србија")
+
+      let openTopoTile = L.tileLayer(
+	  'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
+	  {
+	      attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)',
+	      maxZoom: 21,
+	      bounds: [[-90,-180],[90,180]],
+	      noWrap: true
+	  })
+      layers.addBaseLayer(openTopoTile, "OpenTopoMap")
+      
+      // trails are kept by ref ( PSS unique id )
+      // for each trail following object is created
+      //    feature: reference to Leaflet Layer
+      //    infoDiv: div inside navigation
+      //    properties: key value of geojson feature
+      //        osm-relation-id
+      //        name
+      //        operator
+      //        website
+      //        network
+      
+      var trails = {}
+
+      let trailStyle = {
+	  fillColor: "#FF0000",
+	  color: "#FF0000",
+	  stroke: true,
+	  weight: 3
+      }
+      let trailSelectedStyle = {
+	  fillColor: "#339933",
+	  color: "#339933",
+	  stroke: true,
+	  weight: 3
+      }
+
+      let trailsLayer = L.featureGroup()
+      layers.addOverlay(trailsLayer, "trails")
+      trailsLayer.addTo(map)
+      
+      
+      var selectedTrailId = null
+      let selectTrailFn = function(trailId) {
+	  let previousTrail = trails[selectedTrailId]
+	  let trail = trails[trailId]
+
+	  if (previousTrail != null) {
+	      previousTrail.infoDiv.style.background = "#BFBFBF"
+	      previousTrail.feature.setStyle(function(feature) {
+		  return trailStyle
+	      })
+	  }
+	  trail.infoDiv.style.background = "#339933"
+	  trail.infoDiv.scrollIntoView()
+	  trail.feature.setStyle(function(feature) {
+	      return trailSelectedStyle
+	  })
+	  trailsLayer.removeLayer(trail.feature)
+	  trailsLayer.addLayer(trail.feature)
+	  selectedTrailId = trailId
+      }
+
+      
+      let navigationDiv = document.getElementById("navigation")
+	  
+      fetch("trails.geojson").then(
+	  res => res.json()
+      ).then(function (data) {
+	  for (let index in data.features) {
+	      let trail = data.features[index]
+	      let pssRef = trail.properties.ref
+	      
+	      let trailFeature = L.geoJSON(trail, {})
+	      trailFeature.setStyle(function(feature) {
+		  return trailStyle
+	      })
+	      trailsLayer.addLayer(trailFeature)
+
+	      let infoDiv = document.createElement("div")
+	      infoDiv.className = "navigation_trail"
+	      infoDiv.onclick = function() {
+		  selectTrailFn(pssRef)
+	      }
+	      infoDiv.innerHTML = trail.properties.name
+	      infoDiv.innerHTML += "</br>"
+	      infoDiv.innerHTML += pssRef
+	      infoDiv.innerHTML += "</br>"
+	      infoDiv.innerHTML += trail.properties.operator
+	      infoDiv.innerHTML += "</br>"
+	      infoDiv.innerHTML += trail.properties.network	      
+	      infoDiv.innerHTML += "</br>"
+	      infoDiv.innerHTML += "<a href='" + trail.properties["website"] + "' target='_blank'>ПСС</a>"
+	      infoDiv.innerHTML += "</br>"
+	      infoDiv.innerHTML += "<a href='https://hiking.waymarkedtrails.org/#route?id=" + trail.properties["osm-relation-id"] + "' target='_blank'>waymarkedtrails</a>"	      
+	      infoDiv.innerHTML += "</br>"
+	      infoDiv.innerHTML += "<a href='http://osm.org/relation/" + trail.properties["osm-relation-id"] + "' target='_blank'>OSM</a>"
+
+	      navigationDiv.appendChild(infoDiv)
+	      trails[pssRef] = {
+		  feature: trailFeature,
+		  infoDiv: infoDiv,
+		  properties: trail.properties
+	      }
+
+	      trailFeature.on("click", function() {
+		  selectTrailFn(pssRef)		  
+		  console.log(trail.properties.name)
+	      })
+	  }
+
+	  // todo support focus on specific trail
+	  defaultBounds = trailsLayer.getBounds()
+
+	  /*
+	  var trailsTile = L.geoJSON(
+	      trails,
+	      {
+		  useSimpleStyle: true
+	      })
+	  layers.addOverlay(trails, "trails")
+	  trails.addTo(map)
+	  defaultBounds = trails.getBounds()
+	  */
+
+	  map.fitBounds(defaultBounds, null)
+      })
+      // map.setView([44.41599, 21.08276], 8)
+      </script>
   </body>
 </html>
   
