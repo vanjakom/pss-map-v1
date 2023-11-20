@@ -131,17 +131,72 @@
 	  })
 	  trailsLayer.removeLayer(trail.feature)
 	  trailsLayer.addLayer(trail.feature)
+	  map.fitBounds(trail.feature.getBounds())
 	  selectedTrailId = trailId
+      }
+      let stateSetFn = function() {
+	  window.location.hash =
+	      "#map=" + map.getZoom() + "/" + map.getCenter().lat + "/" + map.getCenter().lng + "/" + selectedTrailId
+      }
+      let stateResetFn = function() {
+	  
       }
 
       
       let navigationDiv = document.getElementById("navigation")
+      let trailSortFn = function(previous, next) {
+	  let previousRef = previous.properties.ref.split("-")
+	  let nextRef = next.properties.ref.split("-")
+
+	  var previousCount = 0;
+	  var nextCount = 0;
 	  
+	  if (previousRef[0].startsWith("E")) {
+	      previousCount += 1000000
+	      previousCount += parseInt(previousRef[1]) * 100
+	  } else if (previousRef[0].startsWith("T")) {
+	      previousCount += 100000
+	      previousCount += parseInt(previousRef[1]) * 100
+	      previousCount += parseInt(previousRef[2])
+	  } else {
+	      previousCount += parseInt(previousRef[0]) * 10000
+	      previousCount += parseInt(previousRef[1]) * 100
+	      previousCount += parseInt(previousRef[2])
+	  }
+
+
+	  if (nextRef[0].startsWith("E")) {
+	      nextCount += 1000000
+	      nextCount += parseInt(nextRef[1]) * 100
+	  } else if (nextRef[0].startsWith("T")) {
+	      nextCount += 100000
+	      nextCount += parseInt(nextRef[1]) * 100
+	  nextCount += parseInt(nextRef[2])
+	  } else {
+	      nextCount += parseInt(nextRef[0]) * 10000
+	      nextCount += parseInt(nextRef[1]) * 100
+	      nextCount += parseInt(nextRef[2])
+	  }
+
+	  // to ideal since E7 is before E4, also problem with E4-11 vs E7-9
+	  // maybe to return to previousCount - nextCount and use different weights
+	  return nextCount - previousCount
+      }
+
+      let searchParams = new URLSearchParams(window.location.search)
+      
       fetch("trails.geojson").then(
 	  res => res.json()
       ).then(function (data) {
+	  var trailsOrder = []
 	  for (let index in data.features) {
-	      let trail = data.features[index]
+	      trailsOrder.push(data.features[index])
+	  }
+	  // sort trails
+	  trailsOrder.sort(trailSortFn)
+	  
+	  for (let index in trailsOrder) {
+	      let trail = trailsOrder[index]
 	      let pssRef = trail.properties.ref
 	      
 	      let trailFeature = L.geoJSON(trail, {})
@@ -182,9 +237,29 @@
 	      })
 	  }
 
-	  // todo support focus on specific trail
-	  defaultBounds = trailsLayer.getBounds()
+	  let trail = searchParams.get("trail")
+	  if (trail != null) {
+	      selectTrailFn(trail)
+	  } else {
+	      map.fitBounds(trailsLayer.getBounds(), null)
+	  }
 
+	  if (window.location.hash) {
+	      var splits = window.location.hash.substring(5).split("/")
+	      map.setView([parseFloat(splits[1]), parseFloat(splits[2])], parseInt(splits[0]))
+	  }
+	  window.onhashchange = function() {
+	      var splits = window.location.hash.substring(5).split("/")
+	      map.setView([parseFloat(splits[1]), parseFloat(splits[2])], parseInt(splits[0]))
+	  }
+	  
+	  map.on("moveend", function() {
+	      window.location.hash = "#map=" + map.getZoom() + "/" + map.getCenter().lat + "/" + map.getCenter().lng 
+	  })
+
+
+	  
+	  
 	  /*
 	  var trailsTile = L.geoJSON(
 	      trails,
@@ -196,7 +271,7 @@
 	  defaultBounds = trails.getBounds()
 	  */
 
-	  map.fitBounds(defaultBounds, null)
+	  
       })
       // map.setView([44.41599, 21.08276], 8)
       </script>
