@@ -112,34 +112,68 @@
       layers.addOverlay(trailsLayer, "trails")
       trailsLayer.addTo(map)
       
-      
       var selectedTrailId = null
       let selectTrailFn = function(trailId) {
-	  let previousTrail = trails[selectedTrailId]
-	  let trail = trails[trailId]
-
-	  if (previousTrail != null) {
+	  if (selectedTrailId != null) {
+	      let previousTrail = trails[selectedTrailId]
 	      previousTrail.infoDiv.style.background = "#BFBFBF"
 	      previousTrail.feature.setStyle(function(feature) {
 		  return trailStyle
 	      })
 	  }
-	  trail.infoDiv.style.background = "#339933"
-	  trail.infoDiv.scrollIntoView()
-	  trail.feature.setStyle(function(feature) {
-	      return trailSelectedStyle
-	  })
-	  trailsLayer.removeLayer(trail.feature)
-	  trailsLayer.addLayer(trail.feature)
-	  map.fitBounds(trail.feature.getBounds())
-	  selectedTrailId = trailId
+	  if (trailId != null) {
+	      let trail = trails[trailId]
+	      trail.infoDiv.style.background = "#339933"
+	      trail.infoDiv.scrollIntoView()
+	      trail.feature.setStyle(function(feature) {
+		  return trailSelectedStyle
+	      })
+	      trailsLayer.removeLayer(trail.feature)
+	      trailsLayer.addLayer(trail.feature)
+	      selectedTrailId = trailId
+	      map.fitBounds(trail.feature.getBounds())
+	  }
       }
+      var ignoreStateUpdate = false
       let stateSetFn = function() {
-	  window.location.hash =
-	      "#map=" + map.getZoom() + "/" + map.getCenter().lat + "/" + map.getCenter().lng + "/" + selectedTrailId
+	  ignoreStateUpdate = true
+	  var hash = "#map=" + map.getZoom() + "/" + map.getCenter().lng + "/" + map.getCenter().lat
+	  if (selectedTrailId != null) {
+	      hash += "&trail=" + selectedTrailId
+	  }
+	  window.location.hash = hash
+	  console.log("state set: " + hash)
       }
       let stateResetFn = function() {
-	  
+	  if (!ignoreStateUpdate) {
+	      if (window.location.hash.length > 1) {
+		  console.log("state reset: " + window.location.hash)
+		  var params = {}
+		  let splits = window.location.hash.substring(1).split("&")
+		  for (let index in splits) {
+		      let pair = splits[index].split("=")
+		      params[pair[0]] = pair[1]
+		  }
+
+		  // first set map based on trail
+		  selectTrailFn(params["trail"])
+
+		  if (params["map"] != null) {
+		      let fields = params["map"].split("/")
+		      let zoom = parseInt(fields[0])
+		      let longitude = parseFloat(fields[1])
+		      let latitude = parseFloat(fields[2])
+
+		      map.setView([latitude, longitude], zoom)
+		  }
+	      } else {
+		  // default to Serbia
+		  map.setView([44.41599, 21.08276], 8)
+	      }
+	  } else {
+	      console.log("ignore state reset")
+	      ignoreStateUpdate = false
+	  }
       }
 
       
@@ -164,14 +198,13 @@
 	      previousCount += parseInt(previousRef[2])
 	  }
 
-
 	  if (nextRef[0].startsWith("E")) {
 	      nextCount += 1000000
 	      nextCount += parseInt(nextRef[1]) * 100
 	  } else if (nextRef[0].startsWith("T")) {
 	      nextCount += 100000
 	      nextCount += parseInt(nextRef[1]) * 100
-	  nextCount += parseInt(nextRef[2])
+	      nextCount += parseInt(nextRef[2])
 	  } else {
 	      nextCount += parseInt(nextRef[0]) * 10000
 	      nextCount += parseInt(nextRef[1]) * 100
@@ -237,6 +270,7 @@
 	      })
 	  }
 
+	  /*
 	  let trail = searchParams.get("trail")
 	  if (trail != null) {
 	      selectTrailFn(trail)
@@ -248,17 +282,11 @@
 	      var splits = window.location.hash.substring(5).split("/")
 	      map.setView([parseFloat(splits[1]), parseFloat(splits[2])], parseInt(splits[0]))
 	  }
-	  window.onhashchange = function() {
-	      var splits = window.location.hash.substring(5).split("/")
-	      map.setView([parseFloat(splits[1]), parseFloat(splits[2])], parseInt(splits[0]))
-	  }
-	  
-	  map.on("moveend", function() {
-	      window.location.hash = "#map=" + map.getZoom() + "/" + map.getCenter().lat + "/" + map.getCenter().lng 
-	  })
+	  */
 
-
-	  
+	  stateResetFn()
+	  window.onhashchange = stateResetFn
+	  map.on("moveend", stateSetFn)
 	  
 	  /*
 	  var trailsTile = L.geoJSON(
