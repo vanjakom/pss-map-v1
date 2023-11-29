@@ -270,38 +270,10 @@
 	      })
 	  }
 
-	  /*
-	  let trail = searchParams.get("trail")
-	  if (trail != null) {
-	      selectTrailFn(trail)
-	  } else {
-	      map.fitBounds(trailsLayer.getBounds(), null)
-	  }
-
-	  if (window.location.hash) {
-	      var splits = window.location.hash.substring(5).split("/")
-	      map.setView([parseFloat(splits[1]), parseFloat(splits[2])], parseInt(splits[0]))
-	  }
-	  */
-
 	  stateResetFn()
 	  window.onhashchange = stateResetFn
 	  map.on("moveend", stateSetFn)
-	  
-	  /*
-	  var trailsTile = L.geoJSON(
-	      trails,
-	      {
-		  useSimpleStyle: true
-	      })
-	  layers.addOverlay(trails, "trails")
-	  trails.addTo(map)
-	  defaultBounds = trails.getBounds()
-	  */
-
-	  
       })
-      // map.setView([44.41599, 21.08276], 8)
       </script>
   </body>
 </html>
