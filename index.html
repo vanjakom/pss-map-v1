@@ -36,6 +36,8 @@
 	  padding: 5px;
 	  margin-top: 10px;
 	  cursor: pointer;
+	  white-space: pre-wrap;
+	  word-wrap: break-word;
       }
     </style>      
   </head>
@@ -87,50 +89,57 @@
       //    feature: reference to Leaflet Layer
       //    infoDiv: div inside navigation
       //    properties: key value of geojson feature
+      //        ref
       //        osm-relation-id
       //        name
       //        operator
       //        website
       //        network
+      //        distance
       
       var trails = {}
-
-      let trailStyle = {
-	  fillColor: "#FF0000",
-	  color: "#FF0000",
-	  stroke: true,
-	  weight: 3
+      var selectedTrailId = null
+      
+      let trailStyleFn = function(feature) {
+	  let trailId = feature.properties.ref
+	  let selected = selectedTrailId == trailId
+	  let color = selected ? "#339933" : "#FF0000"
+	  let width 
+	  if (trailId.startsWith("E")) {
+	      weight = 8
+	  } else if (trailId.startsWith("T")) {
+	      weight = 6
+	  } else {
+	      weight = 4
+	  }
+	  return {
+	      fillColor: color,
+	      color: color,
+	      stroke: true,
+	      weight: weight
+	  }
       }
-      let trailSelectedStyle = {
-	  fillColor: "#339933",
-	  color: "#339933",
-	  stroke: true,
-	  weight: 3
-      }
-
+      
       let trailsLayer = L.featureGroup()
       layers.addOverlay(trailsLayer, "trails")
       trailsLayer.addTo(map)
       
-      var selectedTrailId = null
       let selectTrailFn = function(trailId) {
-	  if (selectedTrailId != null) {
-	      let previousTrail = trails[selectedTrailId]
+	  let previousSelectedTrailId = selectedTrailId
+	  selectedTrailId = trailId
+	  if (previousSelectedTrailId != null) {
+	      let previousTrail = trails[previousSelectedTrailId]
 	      previousTrail.infoDiv.style.background = "#BFBFBF"
-	      previousTrail.feature.setStyle(function(feature) {
-		  return trailStyle
-	      })
+	      previousTrail.feature.setStyle(trailStyleFn)
 	  }
-	  if (trailId != null) {
-	      let trail = trails[trailId]
+	  if (selectedTrailId != null) {
+	      let trail = trails[selectedTrailId]
 	      trail.infoDiv.style.background = "#339933"
 	      trail.infoDiv.scrollIntoView()
-	      trail.feature.setStyle(function(feature) {
-		  return trailSelectedStyle
-	      })
+	      trail.feature.setStyle(trailStyleFn)
+	      // ensure selected is on top
 	      trailsLayer.removeLayer(trail.feature)
 	      trailsLayer.addLayer(trail.feature)
-	      selectedTrailId = trailId
 	      map.fitBounds(trail.feature.getBounds())
 	  }
       }
@@ -233,9 +242,7 @@
 	      let pssRef = trail.properties.ref
 	      
 	      let trailFeature = L.geoJSON(trail, {})
-	      trailFeature.setStyle(function(feature) {
-		  return trailStyle
-	      })
+	      trailFeature.setStyle(trailStyleFn)
 	      trailsLayer.addLayer(trailFeature)
 
 	      let infoDiv = document.createElement("div")
@@ -245,12 +252,26 @@
 	      }
 	      infoDiv.innerHTML = trail.properties.name
 	      infoDiv.innerHTML += "</br>"
-	      infoDiv.innerHTML += pssRef
+	      infoDiv.innerHTML += "Ознака стазе: " + pssRef
 	      infoDiv.innerHTML += "</br>"
-	      infoDiv.innerHTML += trail.properties.operator
-	      infoDiv.innerHTML += "</br>"
-	      infoDiv.innerHTML += trail.properties.network	      
-	      infoDiv.innerHTML += "</br>"
+	      if (trail.properties.network == "iwn") {
+		  infoDiv.innerHTML += "Европски пешачки пут"
+		  infoDiv.innerHTML += "</br>"
+	      } else if (trail.properties.network == "nwn") {
+		  infoDiv.innerHTML += "Планинарска трансферзала"
+		  infoDiv.innerHTML += "</br>"
+	      } else {
+		  infoDiv.innerHTML += "Планинарски и пешачки пут"
+		  infoDiv.innerHTML += "</br>"		  
+	      }
+	      if (trail.properties.operator != null) {
+		  infoDiv.innerHTML += "Друштво: " + trail.properties.operator
+		  infoDiv.innerHTML += "</br>"
+	      }
+	      if (trail.properties.distance != null) {
+		  infoDiv.innerHTML += "Дужина: " + trail.properties.distance
+		  infoDiv.innerHTML += "</br>"
+	      }
 	      infoDiv.innerHTML += "<a href='" + trail.properties["website"] + "' target='_blank'>ПСС</a>"
 	      infoDiv.innerHTML += "</br>"
 	      infoDiv.innerHTML += "<a href='https://hiking.waymarkedtrails.org/#route?id=" + trail.properties["osm-relation-id"] + "' target='_blank'>waymarkedtrails</a>"	      
