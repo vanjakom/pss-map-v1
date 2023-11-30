@@ -241,7 +241,18 @@
 	      let trail = trailsOrder[index]
 	      let pssRef = trail.properties.ref
 	      
-	      let trailFeature = L.geoJSON(trail, {})
+	      let trailFeature = L.geoJSON(
+		  trail,
+		  {
+		      onEachFeature: function(feature, layer) {
+			  layer.bindTooltip(
+			      feature.properties.ref,
+			      {
+				  permanent: true,
+				  interactive: true
+			      })
+		      }
+		  })
 	      trailFeature.setStyle(trailStyleFn)
 	      trailsLayer.addLayer(trailFeature)
 
