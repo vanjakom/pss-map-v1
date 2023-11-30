@@ -61,7 +61,7 @@
 	      bounds: [[-90,-180],[90,180]],
 	      noWrap: true
 	  })
-      layers.addBaseLayer(osmTile, "Open Street Map")
+      layers.addBaseLayer(osmTile, "OpenStreetMap")
       osmTile.addTo(map)
 
       let osmRSTile = L.tileLayer(
@@ -72,7 +72,7 @@
 	      bounds: [[-90,-180],[90,180]],
 	      noWrap: true
 	  })
-      layers.addBaseLayer(osmRSTile, "Open Street Map Србија")
+      layers.addBaseLayer(osmRSTile, "OpenStreetMap Србија")
 
       let openTopoTile = L.tileLayer(
 	  'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
@@ -121,7 +121,7 @@
       }
       
       let trailsLayer = L.featureGroup()
-      layers.addOverlay(trailsLayer, "trails")
+      layers.addOverlay(trailsLayer, "Регистар планинарских терена")
       trailsLayer.addTo(map)
       
       let selectTrailFn = function(trailId) {
