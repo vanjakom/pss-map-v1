@@ -241,19 +241,11 @@
 	      let trail = trailsOrder[index]
 	      let pssRef = trail.properties.ref
 	      
-	      let trailFeature = L.geoJSON(
-		  trail,
-		  {
-		      onEachFeature: function(feature, layer) {
-			  layer.bindTooltip(
-			      feature.properties.ref,
-			      {
-				  permanent: true,
-				  interactive: true
-			      })
-		      }
-		  })
+	      let trailFeature = L.geoJSON(trail)
 	      trailFeature.setStyle(trailStyleFn)
+	      trailFeature.bindTooltip(
+		  pssRef,
+		  { permanent: true, interactive: true })
 	      trailsLayer.addLayer(trailFeature)
 
 	      let infoDiv = document.createElement("div")
@@ -305,6 +297,24 @@
 	  stateResetFn()
 	  window.onhashchange = stateResetFn
 	  map.on("moveend", stateSetFn)
+
+	  map.on("zoomend", function() {
+	      if (map.getZoom() >= 12) {
+		  console.log("open tooltip")
+		  trailsLayer.eachLayer(function (layer) {
+		      if (!layer.isTooltipOpen()) {
+			  layer.openTooltip()
+		      }
+		  })
+	      } else {
+		  console.log("close tooltip")
+		  trailsLayer.eachLayer(function (layer) {
+		      if (layer.isTooltipOpen()) {
+			  layer.closeTooltip()
+		      }
+		  })
+	      }
+	  })
       })
       </script>
   </body>
