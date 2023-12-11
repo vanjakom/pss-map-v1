@@ -246,6 +246,8 @@
 	      trailFeature.bindTooltip(
 		  pssRef,
 		  { permanent: true, interactive: true })
+	      // to be used later to connect feature with trails map
+	      trailFeature.pssRef = pssRef
 	      trailsLayer.addLayer(trailFeature)
 
 	      let infoDiv = document.createElement("div")
@@ -281,7 +283,6 @@
 	      infoDiv.innerHTML += "</br>"
 	      infoDiv.innerHTML += "<a href='http://osm.org/relation/" + trail.properties["osm-relation-id"] + "' target='_blank'>OSM</a>"
 
-	      navigationDiv.appendChild(infoDiv)
 	      trails[pssRef] = {
 		  feature: trailFeature,
 		  infoDiv: infoDiv,
@@ -297,7 +298,15 @@
 	  stateResetFn()
 	  window.onhashchange = stateResetFn
 	  map.on("moveend", stateSetFn)
-
+	  map.on("moveend", function () {
+	      navigationDiv.innerHTML = ""
+	      trailsLayer.eachLayer(function (layer) {
+		  if (map.getBounds().intersects(layer.getBounds())) {
+		      navigationDiv.appendChild(trails[layer.pssRef].infoDiv)
+		  }
+	      })
+	  })
+	  
 	  map.on("zoomend", function() {
 	      if (map.getZoom() >= 12) {
 		  console.log("open tooltip")
