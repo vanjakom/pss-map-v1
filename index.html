@@ -99,23 +99,33 @@
       
       var trails = {}
       var selectedTrailId = null
-      
+
+      let colorSelected = "#ffff00"
+      let colorTrail = "#e60000"
+      let colorEPath = "#003399"
+      let colorTransversal = "#993399"
       let trailStyleFn = function(feature) {
 	  let trailId = feature.properties.ref
 	  let selected = selectedTrailId == trailId
-	  let color = selected ? "#339933" : "#FF0000"
-	  let width 
+	  let color
+	  let width
+	  let opacity = 0.5
 	  if (trailId.startsWith("E")) {
-	      weight = 8
+	      weight = selected ? 10 : 6
+	      color = selected ? colorSelected : colorEPath
 	  } else if (trailId.startsWith("T")) {
-	      weight = 6
+	      weight = selected ? 10 : 4
+	      color = selected ? colorSelected : colorTransversal
 	  } else {
-	      weight = 4
+	      weight = selected ? 10 : 2
+	      color = selected ? colorSelected : colorTrail
 	  }
 	  return {
 	      fillColor: color,
+	      fillOpacity: opacity,
 	      color: color,
 	      stroke: true,
+	      opacity: opacity,
 	      weight: weight
 	  }
       }
@@ -134,7 +144,7 @@
 	  }
 	  if (selectedTrailId != null) {
 	      let trail = trails[selectedTrailId]
-	      trail.infoDiv.style.background = "#339933"
+	      trail.infoDiv.style.background = colorSelected
 	      trail.infoDiv.scrollIntoView()
 	      trail.feature.setStyle(trailStyleFn)
 	      // ensure selected is on top
@@ -224,6 +234,37 @@
 	  // maybe to return to previousCount - nextCount and use different weights
 	  return nextCount - previousCount
       }
+      let adjustTooltipFn = function() {
+	  if (map.getZoom() >= 12) {
+	      console.log("open tooltip")
+	      trailsLayer.eachLayer(function (layer) {
+		  if (!layer.isTooltipOpen()) {
+		      layer.openTooltip()
+		  }
+	      })
+	  } else {
+	      console.log("close tooltip")
+	      trailsLayer.eachLayer(function (layer) {
+		  if (layer.isTooltipOpen()) {
+		      layer.closeTooltip()
+		  }
+	      })
+	  }
+      }
+      let adjustNavigationFn = function () {
+	  navigationDiv.innerHTML = ""
+	  trailsLayer.eachLayer(function (layer) {
+	      if (map.getBounds().intersects(layer.getBounds())) {
+		  navigationDiv.appendChild(trails[layer.pssRef].infoDiv)
+	      }
+	  })
+
+	  // select info for selected trail afer navigation refresh
+	  if (selectedTrailId != null) {
+	      let trail = trails[selectedTrailId]
+	      trail.infoDiv.scrollIntoView()
+	  }
+      }
 
       let searchParams = new URLSearchParams(window.location.search)
       
@@ -296,34 +337,14 @@
 	  }
 
 	  stateResetFn()
-	  window.onhashchange = stateResetFn
-	  map.on("moveend", stateSetFn)
-	  map.on("moveend", function () {
-	      navigationDiv.innerHTML = ""
-	      trailsLayer.eachLayer(function (layer) {
-		  if (map.getBounds().intersects(layer.getBounds())) {
-		      navigationDiv.appendChild(trails[layer.pssRef].infoDiv)
-		  }
-	      })
-	  })
 	  
-	  map.on("zoomend", function() {
-	      if (map.getZoom() >= 12) {
-		  console.log("open tooltip")
-		  trailsLayer.eachLayer(function (layer) {
-		      if (!layer.isTooltipOpen()) {
-			  layer.openTooltip()
-		      }
-		  })
-	      } else {
-		  console.log("close tooltip")
-		  trailsLayer.eachLayer(function (layer) {
-		      if (layer.isTooltipOpen()) {
-			  layer.closeTooltip()
-		      }
-		  })
-	      }
-	  })
+	  window.onhashchange = stateResetFn
+	  map.on("moveend", adjustNavigationFn)
+	  map.on("moveend", stateSetFn)
+	  map.on("zoomend", adjustTooltipFn)
+
+	  adjustNavigationFn()
+	  adjustTooltipFn()
       })
       </script>
   </body>
