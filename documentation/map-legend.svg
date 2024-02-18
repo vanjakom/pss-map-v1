@@ -1,0 +1,13 @@
+<svg width="300" height="105" xmlns="http://www.w3.org/2000/svg">  
+  <line x1="10" y1="20" x2="100" y2="20" style="stroke:#ffff00;stroke-width:10;opacity:0.5" />
+  <text x="110" y="25" font-family="Arial" font-size="12" fill="black">тренутно означена стаза</text>
+  
+  <line x1="10" y1="40" x2="100" y2="40" style="stroke:#003399;stroke-width:6;opacity:0.5" />
+  <text x="110" y="45" font-family="Arial" font-size="12" fill="black">Европски пешачки пут</text>
+  
+  <line x1="10" y1="60" x2="100" y2="60" style="stroke:#993399;stroke-width:4;opacity:0.5" />
+  <text x="110" y="65" font-family="Arial" font-size="12" fill="black">трансверзала</text>
+  
+  <line x1="10" y1="80" x2="100" y2="80" style="stroke:#e60000;stroke-width:2;opacity:0.5" />
+  <text x="110" y="85" font-family="Arial" font-size="12" fill="black">планинарска стаза</text>
+</svg>

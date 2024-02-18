@@ -18,17 +18,16 @@
 	  left: 0px;
 	  top: 0px;
 	  right: 300px;
-	  bottom: 0px;
+	  bottom: 20px;
 	  cursor: crosshair;
       }
       #navigation {
 	  position: absolute;
 	  top: 0px;
 	  right: 0px;
-	  bottom: 0px;
+	  bottom: 20px;
 	  width: 300px;
-	  overflow-y: scroll;
-	  
+	  overflow-y: scroll;	  
       }
       .navigation_trail {
 	  widht: 300px;
@@ -39,12 +38,24 @@
 	  white-space: pre-wrap;
 	  word-wrap: break-word;
       }
+      #status {
+	  padding-left: 10px;
+	  position: absolute;
+	  right: 0px;
+	  left: 0px;
+	  bottom: 0px;
+	  height: 20px;
+	  overflow-y: scroll;
+      }
     </style>      
   </head>
   <body>
     <div id="content">
       <div id="map"></div>
       <div id="navigation"></div>
+      <div id="status">
+	верзија: <a href="documentation/version.html" target="_blank">1.0(20231220)</a>, <a href="documentation/index.html" target="_blank">документација</a>, <a href="documentation/index.html#issues" target="_blank">пријави проблем</a>
+      </div>
     </div>
     <script type="text/javascript">
       let map = L.map("map", {maxBoundsViscosity: 1.0})
@@ -268,7 +279,7 @@
 
       let searchParams = new URLSearchParams(window.location.search)
       
-      fetch("trails.geojson").then(
+      fetch("dataset/trails.geojson").then(
 	  res => res.json()
       ).then(function (data) {
 	  var trailsOrder = []
@@ -343,6 +354,33 @@
 	  map.on("moveend", stateSetFn)
 	  map.on("zoomend", adjustTooltipFn)
 
+	  // add support to get location
+	  var mousedownInterval;
+	  map.on (
+	      "mousedown",
+	      function (e) {
+		  mousedownInterval = setInterval(
+		      function() {
+			  L
+			      .popup({
+				  closeOnClick: false})
+			      .setLatLng(e.latlng)
+			      .setContent(
+				  "longitude: " + Number(e.latlng.lng).toFixed(5) + "</br>" +
+				  "latitude: " + Number(e.latlng.lat).toFixed(5) + "</br>" +
+				  "<a href='http://openstreetmap.org/#map=16/" + e.latlng.lat + "/" + e.latlng.lng + "' target='_blank'>osm</a>" + "</br>")
+			      .openOn(map)},
+		      500)})
+	  map.on(
+	      "mousemove",
+	      function (e) {
+		  clearInterval(mousedownInterval)})
+	  map.on(
+	      "mouseup",
+	      function (e) {
+		  clearInterval(mousedownInterval)})
+
+	  
 	  adjustNavigationFn()
 	  adjustTooltipFn()
       })
