@@ -54,7 +54,7 @@
       <div id="map"></div>
       <div id="navigation"></div>
       <div id="status">
-	верзија: <a href="documentation/version.html" target="_blank">1.0(20240603)</a>, <a href="documentation/index.html" target="_blank">документација</a>, <a href="documentation/index.html#issues" target="_blank">пријави проблем</a>
+	верзија: <a href="documentation/version.html" target="_blank">1.1(20260925)</a>, <a href="dataset/trail-list.html" target="_blank">регистар стаза</a>, <a href="documentation/index.html" target="_blank">документација</a>, <a href="documentation/index.html#issues" target="_blank">пријави проблем</a>
       </div>
     </div>
     <script type="text/javascript">
@@ -144,7 +144,21 @@
       let trailsLayer = L.featureGroup()
       layers.addOverlay(trailsLayer, "Регистар планинарских терена")
       trailsLayer.addTo(map)
-      
+
+      // markers use "marker-body" property for popup html, same convention
+      // as clj-geo.visualization.map/geojson-style-extended-layer
+      let nepravilnostiLayer = L.geoJSON(null, {
+	  pointToLayer: function(feature, latlng) {
+	      return L.marker(latlng)
+	  },
+	  onEachFeature: function(feature, layer) {
+	      if (feature.properties && feature.properties["marker-body"]) {
+		  layer.bindPopup(feature.properties["marker-body"], {maxWidth: "auto"})
+	      }
+	  }
+      })
+      layers.addOverlay(nepravilnostiLayer, "Неправилности")
+
       let selectTrailFn = function(trailId) {
 	  let previousSelectedTrailId = selectedTrailId
 	  selectedTrailId = trailId
@@ -161,7 +175,34 @@
 	      // ensure selected is on top
 	      trailsLayer.removeLayer(trail.feature)
 	      trailsLayer.addLayer(trail.feature)
-	      map.fitBounds(trail.feature.getBounds())
+	      // only move the view if the trail isn't at least partially
+	      // visible already - avoids yanking the view for a trail the
+	      // user can already see part of. checks actual line points
+	      // against the viewport rather than just bounding boxes -
+	      // two trails can have overlapping bounding boxes ( e.g.
+	      // nearby trails in the same area ) while neither's actual
+	      // rendered line is anywhere near the current view
+	      var trailVisible = false
+	      try {
+		  let mapBounds = map.getBounds()
+		  trail.feature.eachLayer(function(subLayer) {
+		      if (trailVisible) {
+			  return
+		      }
+		      let latlngs = subLayer.getLatLngs().flat(Infinity)
+		      for (let i = 0; i < latlngs.length; i++) {
+			  if (mapBounds.contains(latlngs[i])) {
+			      trailVisible = true
+			      break
+			  }
+		      }
+		  })
+	      } catch (e) {
+		  trailVisible = false
+	      }
+	      if (!trailVisible) {
+		  map.fitBounds(trail.feature.getBounds())
+	      }
 	  }
       }
       var ignoreStateUpdate = false
@@ -185,9 +226,10 @@
 		      params[pair[0]] = pair[1]
 		  }
 
-		  // first set map based on trail
-		  selectTrailFn(params["trail"])
-
+		  // apply the explicit map position first, then select the
+		  // trail - selectTrailFn only refits the view if the trail
+		  // isn't visible in whatever view is already active, so it
+		  // needs the hash's map position applied before it runs
 		  if (params["map"] != null) {
 		      let fields = params["map"].split("/")
 		      let zoom = parseInt(fields[0])
@@ -196,6 +238,8 @@
 
 		      map.setView([latitude, longitude], zoom)
 		  }
+
+		  selectTrailFn(params["trail"])
 	      } else {
 		  // default to Serbia
 		  map.setView([44.41599, 21.08276], 8)
@@ -208,42 +252,35 @@
 
       
       let navigationDiv = document.getElementById("navigation")
+      // ref is either "<region>-<mountain>-<number>" ( normal trail ),
+      // "T-<region>-<number>" ( transversal ) or "E<road>-<segment>"
+      // optionally followed by "-<subsegment>" ( E path, e.g. "E7-10-11" ).
+      // sorts normal trails first, then transversals, then E paths, each
+      // group ascending by its own numeric parts
+      let refSortWeight = function(parts) {
+	  var weight = 0
+	  if (parts[0].startsWith("E")) {
+	      weight += 1000000
+	      weight += parseInt(parts[0].substring(1)) * 10000
+	      weight += parseInt(parts[1]) * 100
+	      if (parts[2] != null) {
+		  weight += parseInt(parts[2])
+	      }
+	  } else if (parts[0].startsWith("T")) {
+	      weight += 100000
+	      weight += parseInt(parts[1]) * 100
+	      weight += parseInt(parts[2])
+	  } else {
+	      weight += parseInt(parts[0]) * 10000
+	      weight += parseInt(parts[1]) * 100
+	      weight += parseInt(parts[2])
+	  }
+	  return weight
+      }
       let trailSortFn = function(previous, next) {
 	  let previousRef = previous.properties.ref.split("-")
 	  let nextRef = next.properties.ref.split("-")
-
-	  var previousCount = 0;
-	  var nextCount = 0;
-	  
-	  if (previousRef[0].startsWith("E")) {
-	      previousCount += 1000000
-	      previousCount += parseInt(previousRef[1]) * 100
-	  } else if (previousRef[0].startsWith("T")) {
-	      previousCount += 100000
-	      previousCount += parseInt(previousRef[1]) * 100
-	      previousCount += parseInt(previousRef[2])
-	  } else {
-	      previousCount += parseInt(previousRef[0]) * 10000
-	      previousCount += parseInt(previousRef[1]) * 100
-	      previousCount += parseInt(previousRef[2])
-	  }
-
-	  if (nextRef[0].startsWith("E")) {
-	      nextCount += 1000000
-	      nextCount += parseInt(nextRef[1]) * 100
-	  } else if (nextRef[0].startsWith("T")) {
-	      nextCount += 100000
-	      nextCount += parseInt(nextRef[1]) * 100
-	      nextCount += parseInt(nextRef[2])
-	  } else {
-	      nextCount += parseInt(nextRef[0]) * 10000
-	      nextCount += parseInt(nextRef[1]) * 100
-	      nextCount += parseInt(nextRef[2])
-	  }
-
-	  // to ideal since E7 is before E4, also problem with E4-11 vs E7-9
-	  // maybe to return to previousCount - nextCount and use different weights
-	  return nextCount - previousCount
+	  return refSortWeight(previousRef) - refSortWeight(nextRef)
       }
       let adjustTooltipFn = function() {
 	  if (map.getZoom() >= 12) {
@@ -383,6 +420,12 @@
 	  
 	  adjustNavigationFn()
 	  adjustTooltipFn()
+      })
+
+      fetch("dataset/nepravilnosti.geojson").then(
+	  res => res.json()
+      ).then(function (data) {
+	  nepravilnostiLayer.addData(data)
       })
       </script>
   </body>

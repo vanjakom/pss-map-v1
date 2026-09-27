@@ -1,0 +1,102 @@
+{"type":"FeatureCollection",
+ "features":
+ [{"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-33-3<br\/>20260920<br\/>Сегмент пута је нестао, треба даље<br\/>истражити шта се десило у OSM и да ли је<br\/>измена оправдана."},
+   "geometry":{"type":"Point", "coordinates":[21.82959, 43.60219]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-48-2<br\/>Према<br\/><a href='https:\/\/www.openstreetmap.org\/changeset\/163438554' target='_blank'>https:\/\/www.openstreetmap.org\/changeset\/163438554<\/a><br\/>пут не постоји и<br\/>пролази кроз приватно имање. Потребно је<br\/>контактирати клуб."},
+   "geometry":{"type":"Point", "coordinates":[21.50717, 44.30013]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#7-22-1<br\/>Едукативна стаза „neXt боровнице”, игре<br\/>са именом<br\/>#map"},
+   "geometry":{"type":"Point", "coordinates":[22.32651, 42.72561]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-53-1<br\/>Део стазе ка видиковцу није мапиран,<br\/>могло би<br\/>#map"},
+   "geometry":{"type":"Point", "coordinates":[21.46853, 43.98889]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-27-2<br\/>Траг, назив и опис су обрнути, проверити<br\/>са клубом. Мапирано према називу"},
+   "geometry":{"type":"Point", "coordinates":[21.8838, 43.70526]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":"#T-3-2<br\/>20260224 реконструисао према трагу"},
+   "geometry":{"type":"Point", "coordinates":[20.21768, 44.13042]}},
+  {"type":"Feature",
+   "properties":{"marker-body":"#5-12-21<br\/>Одступање од трага."},
+   "geometry":{"type":"Point", "coordinates":[19.6085, 43.66706]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#5-12-11<br\/>Траг заобилази паркинг али већ постоји<br\/>пут који води на паркинг у OSM.<br\/>Проверити мапирање."},
+   "geometry":{"type":"Point", "coordinates":[19.64773, 43.67128]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-4-6<br\/>одступање на крају стазе, коришћен OSM<br\/>20260222 додао на OSM прилаз врху из<br\/>трага али нисам користио, доста осталих<br\/>стаза користи постојећи успон."},
+   "geometry":{"type":"Point", "coordinates":[21.56629, 44.3182]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-27-7<br\/>траг има додатни сегмент. није коришћен."},
+   "geometry":{"type":"Point", "coordinates":[21.88494, 43.77441]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-39-4<br\/>одступање на крају стазе, коришћен OSM"},
+   "geometry":{"type":"Point", "coordinates":[22.16069, 43.35313]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-27-6<br\/>траг иде у супротном смеру од описа."},
+   "geometry":{"type":"Point", "coordinates":[21.88386, 43.70528]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":"#3-7-1<br\/>Почетак трага проблематичан."},
+   "geometry":{"type":"Point", "coordinates":[19.37746, 44.18847]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":"#3-28-4<br\/>Доста непоклапања са треком."},
+   "geometry":{"type":"Point", "coordinates":[20.17519, 43.91541]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#3-14-4<br\/>Део стазе је зарастао. Проблематична<br\/>секција је обрисана из релације,<br\/>потребно је контактирати клуб."},
+   "geometry":{"type":"Point", "coordinates":[19.66355, 44.15672]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#3-28-4<br\/><a href='https:\/\/www.openstreetmap.org\/relation\/11189458' target='_blank'>https:\/\/www.openstreetmap.org\/relation\/11189458<\/a><br\/>#kablarpd<br\/>доста непоклапања са путевима, остављено<br\/>како је унешено кроз OSM<br\/>проверити са клубом"},
+   "geometry":{"type":"Point", "coordinates":[20.17515, 43.91535]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#5-17-1<br\/><a href='https:\/\/openstreetmap.org\/relation\/11214225' target='_blank'>https:\/\/openstreetmap.org\/relation\/11214225<\/a><br\/>#kablarpd<br\/>стаза је скраћена до изласка на<br\/>магистралу јер мост више не постоји до<br\/>дома.<br\/>проверити одлуку са друштвом"},
+   "geometry":{"type":"Point", "coordinates":[20.19524, 43.90367]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#4-27-4<br\/><a href='https:\/\/www.openstreetmap.org\/relation\/11097832' target='_blank'>https:\/\/www.openstreetmap.org\/relation\/11097832<\/a><br\/>#ostracukapd<br\/>на основу измена Stadtigel и дискусије<br\/>стаза је промељена да користи<br\/>северо-источни пут, и Е4-11 користи њега<br\/>тако да је вероватно коректно<br\/><a href='https:\/\/www.openstreetmap.org\/changeset\/137882922' target='_blank'>https:\/\/www.openstreetmap.org\/changeset\/137882922<\/a><br\/>отворен ноте<br\/><a href='https:\/\/www.openstreetmap.org\/note\/4030952' target='_blank'>https:\/\/www.openstreetmap.org\/note\/4030952<\/a>"},
+   "geometry":{"type":"Point", "coordinates":[21.89137, 43.75132]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#E4-11<br\/>#siljakpk<br\/>проверити да ли је Шиљак ПК одговоран<br\/>на основу измена Stadtigel и дискусије<br\/>стаза је прекинута на спорном месту<br\/>обишао 20230520<br\/><a href='https:\/\/www.openstreetmap.org\/changeset\/138677252' target='_blank'>https:\/\/www.openstreetmap.org\/changeset\/138677252<\/a><br\/>отворен ноте<br\/><a href='https:\/\/www.openstreetmap.org\/note\/4030903' target='_blank'>https:\/\/www.openstreetmap.org\/note\/4030903<\/a>"},
+   "geometry":{"type":"Point", "coordinates":[21.95055, 43.7921]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "#5-17-2<br\/>#kablarpd<br\/>иницијално је стаза ишла до чесме (?),<br\/>спајања са ОКТ. тако стоји и у опису.<br\/>трек иде до врха Овчара<br\/>20230524 додатa неправилност, стаза<br\/>остављена како је иницијално била<br\/><a href='https:\/\/www.openstreetmap.org\/relation\/11489032' target='_blank'>https:\/\/www.openstreetmap.org\/relation\/11489032<\/a>"},
+   "geometry":{"type":"Point", "coordinates":[20.22431, 43.89035]}},
+  {"type":"Feature",
+   "properties":
+   {"marker-body":
+    "<a href='https:\/\/www.openstreetmap.org\/relation\/11097832' target='_blank'>https:\/\/www.openstreetmap.org\/relation\/11097832<\/a>"},
+   "geometry":{"type":"Point", "coordinates":[21.8912, 43.75127]}}]}
