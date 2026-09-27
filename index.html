@@ -205,6 +205,35 @@
 	      }
 	  }
       }
+      // reduces a club/operator name to the same anchor form used by
+      // osm-pss-integration.job.staze/create-trail-list-club-html: lowercase,
+      // diacritics transliterated, everything else stripped
+      let simplifyClubFn = function(club) {
+	  if (club == null) {
+	      return ""
+	  }
+	  return club
+	      .toLowerCase()
+	      .replaceAll("č", "c")
+	      .replaceAll("ć", "c")
+	      .replaceAll("š", "s")
+	      .replaceAll("ž", "z")
+	      .replaceAll("đ", "dj")
+	      .replace(/[^a-z]/g, "")
+      }
+
+      let parseHashParamsFn = function() {
+	  var params = {}
+	  if (window.location.hash.length > 1) {
+	      let splits = window.location.hash.substring(1).split("&")
+	      for (let index in splits) {
+		  let pair = splits[index].split("=")
+		  params[pair[0]] = pair[1]
+	      }
+	  }
+	  return params
+      }
+
       var ignoreStateUpdate = false
       let stateSetFn = function() {
 	  ignoreStateUpdate = true
@@ -217,33 +246,35 @@
       }
       let stateResetFn = function() {
 	  if (!ignoreStateUpdate) {
-	      if (window.location.hash.length > 1) {
-		  console.log("state reset: " + window.location.hash)
-		  var params = {}
-		  let splits = window.location.hash.substring(1).split("&")
-		  for (let index in splits) {
-		      let pair = splits[index].split("=")
-		      params[pair[0]] = pair[1]
-		  }
+	      console.log("state reset: " + window.location.hash)
+	      var params = parseHashParamsFn()
 
-		  // apply the explicit map position first, then select the
-		  // trail - selectTrailFn only refits the view if the trail
-		  // isn't visible in whatever view is already active, so it
-		  // needs the hash's map position applied before it runs
-		  if (params["map"] != null) {
-		      let fields = params["map"].split("/")
-		      let zoom = parseInt(fields[0])
-		      let longitude = parseFloat(fields[1])
-		      let latitude = parseFloat(fields[2])
+	      // apply the explicit map position first ( or the default view,
+	      // if none given - map.setView must run unconditionally here,
+	      // other hash params ( e.g. club ) can be present without a
+	      // map= position, and later code assumes the view is set ),
+	      // then select the trail - selectTrailFn only refits the view
+	      // if the trail isn't visible in whatever view is already
+	      // active, so it needs the map position applied before it runs
+	      if (params["map"] != null) {
+		  let fields = params["map"].split("/")
+		  let zoom = parseInt(fields[0])
+		  let longitude = parseFloat(fields[1])
+		  let latitude = parseFloat(fields[2])
 
-		      map.setView([latitude, longitude], zoom)
-		  }
-
-		  selectTrailFn(params["trail"])
+		  map.setView([latitude, longitude], zoom)
+	      } else if (params["trail"] == null && trailsLayer.getBounds().isValid()) {
+		  // no explicit position and no specific trail requested -
+		  // fit to whatever trails actually got loaded ( respects
+		  // clubFilter, since filtered-out trails are never added
+		  // to trailsLayer )
+		  map.fitBounds(trailsLayer.getBounds())
 	      } else {
 		  // default to Serbia
 		  map.setView([44.41599, 21.08276], 8)
 	      }
+
+	      selectTrailFn(params["trail"])
 	  } else {
 	      console.log("ignore state reset")
 	      ignoreStateUpdate = false
@@ -314,8 +345,22 @@
 	  }
       }
 
-      let searchParams = new URLSearchParams(window.location.search)
-      
+      // e.g. ?club=ostracukapd - only trails whose operator ( club )
+      // simplifies to this value are shown. query param, not hash, since
+      // it's a static filter applied once at load, not live view state -
+      // stateSetFn rewrites the hash from scratch on every map move/trail
+      // select, which would silently drop it if it lived there
+      let clubFilter = new URLSearchParams(window.location.search).get("club")
+
+      // unconditional zoom-to-fit, unlike selectTrailFn which only refits
+      // the view if the trail isn't already at least partially visible -
+      // bound to window since it's invoked from an inline onclick attribute
+      window.fitTrailFn = function(pssRef, event) {
+	  event.stopPropagation()
+	  selectTrailFn(pssRef)
+	  map.fitBounds(trails[pssRef].feature.getBounds())
+      }
+
       fetch("dataset/trails.geojson").then(
 	  res => res.json()
       ).then(function (data) {
@@ -329,7 +374,11 @@
 	  for (let index in trailsOrder) {
 	      let trail = trailsOrder[index]
 	      let pssRef = trail.properties.ref
-	      
+
+	      if (clubFilter != null && simplifyClubFn(trail.properties.operator) != clubFilter) {
+		  continue
+	      }
+
 	      let trailFeature = L.geoJSON(trail)
 	      trailFeature.setStyle(trailStyleFn)
 	      trailFeature.bindTooltip(
@@ -344,7 +393,8 @@
 	      infoDiv.onclick = function() {
 		  selectTrailFn(pssRef)
 	      }
-	      infoDiv.innerHTML = trail.properties.name
+	      infoDiv.innerHTML = trail.properties.name +
+		  " <a href='javascript:void(0)' onclick=\"fitTrailFn('" + pssRef + "', event)\">[прикажи]</a>"
 	      infoDiv.innerHTML += "</br>"
 	      infoDiv.innerHTML += "Ознака стазе: " + pssRef
 	      infoDiv.innerHTML += "</br>"
